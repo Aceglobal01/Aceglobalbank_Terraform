@@ -1,0 +1,4 @@
+vpc_cidrblock = "192.168.0.0/16"
+environment   = "staging"
+# If you have credentials here in your real file, mask them like this:
+# cloud_provider_secret = "YOUR_SECRET_HERE"

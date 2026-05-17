@@ -1,0 +1,19 @@
+# === Terraform Hiding Rules ===
+# Ignore the local files for passwords/keys
+terraform.tfvars
+terraform.tfvars.json
+
+# Ignore local terraform working directories and state files
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
+
+# === Docker & Runner Secret Hiding Rules ===
+# This catches the hidden .env file inside docker runner folder
+.env
+**/docker-git-runner-setup/.env
+
+# === System & Log Cleanup ===
+*.log
+.DS_Store
