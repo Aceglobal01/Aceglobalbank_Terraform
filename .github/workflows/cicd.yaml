@@ -1,0 +1,60 @@
+name: Deploy to AWS with Terraform
+
+on:
+  push:
+    branches:
+    - dev-branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+
+    - name: Set up Terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: 1.0.0
+
+    - name: Verify Identity and S3 Access
+      run: |
+        aws sts get-caller-identity
+        aws s3 ls s3://acepodterraformbucket
+
+    - name: Terraform Init
+      run: terraform init
+      # ADD THIS NEW STEP RIGHT HERE
+    - name: Fix Broken State
+      run: |
+        terraform state rm module.eks-deployment.helm_release.nginx_ingress || true
+        terraform state rm module.eks-deployment.helm_release.cert_manager || true
+
+    - name: Terraform Plan
+      run: terraform plan -out=tfplan
+    - name: Terraform Apply
+      run: terraform apply -auto-approve tfplan
+
+    - name: 'install kubectl'
+      run: |
+        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+        chmod +x ./kubectl
+        sudo mv ./kubectl /usr/local/bin/kubectl
+
+    - name: 'authenticate to EKS Cluster'
+      run: aws eks update-kubeconfig --name ${{  secrets.EKS_CLUSTER_NAME }} --region us-east-1
+
+    - name: 'Deploying the ClusterIssuer to EKS'
+      run: kubectl apply -f ClusterIssuer.yaml
+
+    - name: 'Deploying argocd ingress rule to EKS'
+      run: kubectl apply -f ingress-argocd.yaml -n argocd
+    - name: Terraform Destroy
+      run: terraform destroy -auto-approve
