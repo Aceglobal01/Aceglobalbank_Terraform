@@ -30,26 +30,38 @@ data "aws_eks_cluster_auth" "eks" {
     name = aws_eks_cluster.eks.name
 }
 resource "helm_release" "nginx_ingress" {
-    name       = "nginx-ingress-v2"
-    namespace  =  "ingress-nginx-v2"
-    repository = "https://kubernetes.github.io/ingress-nginx"
-    chart      = "ingress-nginx"
-    version    = "4.12.0"
-    create_namespace = true
+  name             = "nginx-ingress-v2"
+  namespace        = "ingress-nginx-v2"
+  repository       = "https://kubernetes.github.io/ingress-nginx"
+  chart            = "ingress-nginx"
+  version          = "4.12.0"
+  create_namespace = true
+  timeout          = 900
+  
+  force_update     = true
+  recreate_pods    = true
 
-    timeout = 900
-    
-    force_update = true
-    recreate_pods = true 
+  set {
+    name  = "controller.admissionWebhooks.enabled"
+    value = "false"
+  }
 
+  # THE FIX: Scale down requests so it fits on crowded/small worker nodes
+  set {
+    name  = "controller.replicaCount"
+    value = "1"
+  }
+  set {
+    name  = "controller.resources.requests.cpu"
+    value = "50m"
+  }
+  set {
+    name  = "controller.resources.requests.memory"
+    value = "50Mi"
+  }
 
-    set{
-        name = "controller.admissionWebhooks.enabled"
-        value = "false"
-    }
-
-    values = [file("${path.module}/nginx-ingress-values.yaml")]
-    depends_on = [ aws_eks_node_group.eks_node_group ]
+  values     = [file("${path.module}/nginx-ingress-values.yaml")]
+  depends_on = [aws_eks_node_group.eks_node_group]
 }
 
 data "aws_lb" "nginx_ingress" {
