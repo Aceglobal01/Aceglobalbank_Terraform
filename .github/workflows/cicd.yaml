@@ -56,5 +56,5 @@ jobs:
 
     - name: 'Deploying argocd ingress rule to EKS'
       run: kubectl apply -f ingress-argocd.yaml -n argocd
-    - name: Terraform Destroy
-      run: terraform destroy -auto-approve
+    #- name: Terraform Destroy
+    # run: terraform destroy -auto-approve
