@@ -27,7 +27,7 @@ jobs:
     - name: Verify Identity and S3 Access
       run: |
         aws sts get-caller-identity
-        aws s3 ls s3://acepodterraformbucket
+        aws s3 ls s3://s3-pod1-acebucket
 
     - name: Terraform Init
       run: terraform init
