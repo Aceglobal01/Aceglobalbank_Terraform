@@ -17,7 +17,7 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-east-1
+        aws-region: us-west-1
 
     - name: Set up Terraform
       uses: hashicorp/setup-terraform@v1
@@ -49,7 +49,7 @@ jobs:
         sudo mv ./kubectl /usr/local/bin/kubectl
 
     - name: 'authenticate to EKS Cluster'
-      run: aws eks update-kubeconfig --name ${{  secrets.EKS_CLUSTER_NAME }} --region us-east-1
+      run: aws eks update-kubeconfig --name ${{  secrets.EKS_CLUSTER_NAME }} --region us-west-1
 
     - name: 'Deploying the ClusterIssuer to EKS'
       run: kubectl apply -f ClusterIssuer.yaml
