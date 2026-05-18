@@ -86,7 +86,7 @@ variable "zone_name" {
 variable "domain-name" {
   description = "Domain name to be created"
   type        = string
-  default     = "myapp.example.com"
+  default     = "aceglobalpod.online"
 }
 
 variable "namecheap_api_user" {
