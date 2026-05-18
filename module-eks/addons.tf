@@ -72,15 +72,6 @@ data "aws_lb" "nginx_ingress" {
   depends_on = [helm_release.nginx_ingress]
 
 }
-resource "time_sleep" "wait_for_ingress_lb" {
-  depends_on = [helm_release.nginx_ingress]
-  create_duration = "3m"
-}
-
-# 2. Tell the data block to wait for the sleep timer to finish
-data "aws_lb" "nginx_ingress" {
-  depends_on = [time_sleep.wait_for_ingress_lb]
-}
 
 resource "helm_release" "cert_manager" {
     name       = "cert-manager"
