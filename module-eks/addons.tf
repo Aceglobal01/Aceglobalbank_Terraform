@@ -1,3 +1,16 @@
+terraform {
+  required_providers {
+    helm = {
+      source  = "hashicorp/helm"
+      version = "~> 2.12.0"
+    }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "~> 2.24.0"
+    }
+  }
+}
+
 provider "helm" {
     kubernetes {
         host                   = aws_eks_cluster.eks.endpoint
@@ -43,10 +56,12 @@ resource "helm_release" "cert_manager" {
     version    = "1.14.5"
     namespace  = "cert-manager"
     create_namespace = true
+
     set {
         name  = "installCRDs"
         value = "true"
     }
+
     depends_on = [ helm_release.nginx_ingress ]
 }
 #==================================================
