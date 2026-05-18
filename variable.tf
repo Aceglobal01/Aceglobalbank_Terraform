@@ -34,7 +34,7 @@ variable "create_elastic_ip" {
 variable "desired_size" {
   description = "Desired size of the EKS node group"
   type        = number
-  default     = 2
+  default     = 3
 }
 
 variable "max_size" {
@@ -52,7 +52,7 @@ variable "min_size" {
 variable "instance_types" {
   description = "Instance types for the EKS node group"
   type        = list(string)
-  default     = ["t2.micro"]    
+  default     = ["t3.large"]    
 } 
 
 variable "capacity_type" {
