@@ -36,10 +36,17 @@ resource "helm_release" "nginx_ingress" {
     chart      = "ingress-nginx"
     version    = "4.12.0"
     create_namespace = true
+
+    timeout = 900
     
     force_update = true
     recreate_pods = true 
 
+
+    set{
+        name = "controller.admissionWebhooks.enabled"
+        value = "false"
+    }
 
     values = [file("${path.module}/nginx-ingress-values.yaml")]
     depends_on = [ aws_eks_node_group.eks_node_group ]
