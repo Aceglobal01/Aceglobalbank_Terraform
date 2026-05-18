@@ -36,6 +36,10 @@ resource "helm_release" "nginx_ingress" {
     version    = "4.12.0"
     namespace  = "ingress-nginx"
     create_namespace = true
+    
+    force_update = true
+    recreate_pods = true
+    force_override = true
 
     values = [file("${path.module}/nginx-ingress-values.yaml")]
     depends_on = [ aws_eks_node_group.eks_node_group ]
