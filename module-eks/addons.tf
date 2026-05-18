@@ -64,13 +64,17 @@ resource "helm_release" "nginx_ingress" {
   depends_on = [aws_eks_node_group.eks_node_group]
 }
 
+resource "time_sleep" "wait_for_ingress_lb" {
+  depends_on      = [helm_release.nginx_ingress]
+  create_duration = "3m"
+}
+
 data "aws_lb" "nginx_ingress" {
   tags = {
     "kubernetes.io/service-name" = "ingress-nginx/nginx-ingress-ingress-nginx-controller"
   }
 
-  depends_on = [helm_release.nginx_ingress]
-
+  depends_on = [time_sleep.wait_for_ingress_lb]
 }
 
 resource "helm_release" "cert_manager" {
