@@ -12,11 +12,11 @@ terraform {
 }
 
 provider "helm" {
-    kubernetes {
-        host                   = aws_eks_cluster.eks.endpoint
-        cluster_ca_certificate = base64decode(aws_eks_cluster.eks.certificate_authority[0].data)
-        token                  = data.aws_eks_cluster_auth.eks.token
-    }
+  kubernetes {
+    host                   = aws_eks_cluster.eks.endpoint
+    cluster_ca_certificate = base64decode(aws_eks_cluster.eks.certificate_authority[0].data)
+    token                  = data.aws_eks_cluster_auth.eks.token
+  }
 }
 
 provider "kubernetes" {
@@ -27,8 +27,9 @@ provider "kubernetes" {
 }
 
 data "aws_eks_cluster_auth" "eks" {
-    name = aws_eks_cluster.eks.name
+  name = aws_eks_cluster.eks.name
 }
+
 resource "helm_release" "nginx_ingress" {
   name             = "nginx-ingress-v2"
   namespace        = "ingress-nginx-v2"
@@ -46,7 +47,6 @@ resource "helm_release" "nginx_ingress" {
     value = "false"
   }
 
-  # THE FIX: Scale down requests so it fits on crowded/small worker nodes
   set {
     name  = "controller.replicaCount"
     value = "1"
@@ -69,46 +69,51 @@ resource "time_sleep" "wait_for_ingress_lb" {
   create_duration = "3m"
 }
 
-
+# ==================================================
+# THE FIXES ARE APPLIED HERE
+# ==================================================
 
 data "kubernetes_service" "ingress_nginx" {
   metadata {
-    name      = "ingress-nginx-controller"
-    namespace = "ingress-nginx"
+    # The name Helm typically assigns to the controller service 
+    name      = "nginx-ingress-v2-ingress-nginx-controller" 
+    # Must match the helm_release namespace exactly
+    namespace = "ingress-nginx-v2" 
   }
-  depends_on = [helm_release.nginx_ingress]
+  # Wait for the sleep timer to finish so AWS actually provisions the LB
+  depends_on = [time_sleep.wait_for_ingress_lb] 
 }
 
 output "nginx_lb_dns" {
-  value = try(data.kubernetes_service.ingress_nginx.status[0].load_balancer[0].ingress[0].hostname, null)
+  description = "The DNS name of the NGINX Ingress Load Balancer"
+  value       = try(data.kubernetes_service.ingress_nginx.status[0].load_balancer[0].ingress[0].hostname, null)
 }
 
-
+# ==================================================
 
 resource "helm_release" "cert_manager" {
-    name       = "cert-manager"
-    repository = "https://charts.jetstack.io"
-    chart      = "cert-manager"
-    version    = "1.14.5"
-    namespace  = "cert-manager"
-    create_namespace = true
+  name             = "cert-manager"
+  repository       = "https://charts.jetstack.io"
+  chart            = "cert-manager"
+  version          = "1.14.5"
+  namespace        = "cert-manager"
+  create_namespace = true
 
-    set {
-        name  = "installCRDs"
-        value = "true"
-    }
+  set {
+    name  = "installCRDs"
+    value = "true"
+  }
 
-    depends_on = [ helm_release.nginx_ingress ]
+  depends_on = [helm_release.nginx_ingress]
 }
-#==================================================
 
 resource "helm_release" "argocd" {
-    name             = "argocd"
-    repository       = "https://argoproj.github.io/argo-helm"
-    chart            = "argo-cd"
-    version          = "5.51.6"
-    namespace        = "argocd"
-    create_namespace = true
-    values = [file("${path.module}/argocd-values.yaml")]
-    depends_on = [ helm_release.nginx_ingress, helm_release.cert_manager]
+  name             = "argocd"
+  repository       = "https://argoproj.github.io/argo-helm"
+  chart            = "argo-cd"
+  version          = "5.51.6"
+  namespace        = "argocd"
+  create_namespace = true
+  values           = [file("${path.module}/argocd-values.yaml")]
+  depends_on       = [helm_release.nginx_ingress, helm_release.cert_manager]
 }
