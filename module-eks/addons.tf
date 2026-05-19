@@ -69,13 +69,27 @@ resource "time_sleep" "wait_for_ingress_lb" {
   create_duration = "3m"
 }
 
-data "aws_lb" "nginx_ingress" {
+#data "aws_lb" "nginx_ingress" {
   tags = {
     "kubernetes.io/service-name" = "ingress-nginx/nginx-ingress-ingress-nginx-controller"
   }
 
   depends_on = [time_sleep.wait_for_ingress_lb]
+#}
+
+data "kubernetes_service" "ingress_nginx" {
+  metadata {
+    name      = "ingress-nginx-controller"
+    namespace = "ingress-nginx"
+  }
+  depends_on = [helm_release.nginx_ingress]
 }
+
+output "nginx_lb_dns" {
+  value = try(data.kubernetes_service.ingress_nginx.status[0].load_balancer[0].ingress[0].hostname, null)
+}
+
+
 
 resource "helm_release" "cert_manager" {
     name       = "cert-manager"
