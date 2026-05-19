@@ -84,10 +84,6 @@ data "kubernetes_service" "ingress_nginx" {
   depends_on = [time_sleep.wait_for_ingress_lb] 
 }
 
-output "nginx_lb_dns" {
-  description = "The DNS name of the NGINX Ingress Load Balancer"
-  value       = try(data.kubernetes_service.ingress_nginx.status[0].load_balancer[0].ingress[0].hostname, null)
-}
 
 # ==================================================
 
