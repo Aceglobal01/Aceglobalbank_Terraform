@@ -32,10 +32,10 @@ jobs:
     - name: Terraform Init
       run: terraform init
       # ADD THIS NEW STEP RIGHT HERE
-    - name: Fix Broken State
-      run: |
-        terraform state rm module.eks-deployment.helm_release.nginx_ingress || true
-        terraform state rm module.eks-deployment.helm_release.cert_manager || true
+    #- name: Fix Broken State
+      #run: |
+        #terraform state rm module.eks-deployment.helm_release.nginx_ingress || true
+        #terraform state rm module.eks-deployment.helm_release.cert_manager || true
 
     - name: Terraform Plan
       run: terraform plan -out=tfplan
