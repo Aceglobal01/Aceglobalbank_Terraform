@@ -69,13 +69,7 @@ resource "time_sleep" "wait_for_ingress_lb" {
   create_duration = "3m"
 }
 
-#data "aws_lb" "nginx_ingress" {
-  tags = {
-    "kubernetes.io/service-name" = "ingress-nginx/nginx-ingress-ingress-nginx-controller"
-  }
 
-  depends_on = [time_sleep.wait_for_ingress_lb]
-#}
 
 data "kubernetes_service" "ingress_nginx" {
   metadata {
