@@ -32,10 +32,10 @@ jobs:
     - name: Terraform Init
       run: terraform init
       # ADD THIS NEW STEP RIGHT HERE
-    #- name: Fix Broken State
+      #- name: Fix Broken State
       #run: |
-        #terraform state rm module.eks-deployment.helm_release.nginx_ingress || true
-        #terraform state rm module.eks-deployment.helm_release.cert_manager || true
+      #terraform state rm module.eks-deployment.helm_release.nginx_ingress || true
+      #terraform state rm module.eks-deployment.helm_release.cert_manager || true
 
     - name: Terraform Plan
       run: terraform plan -out=tfplan
@@ -50,6 +50,11 @@ jobs:
 
     - name: 'authenticate to EKS Cluster'
       run: aws eks update-kubeconfig --name ${{  secrets.EKS_CLUSTER_NAME }} --region us-west-1
+
+    - name: 'Clean up ghost NGINX webhooks'
+      run: |
+        kubectl delete validatingwebhookconfiguration ingress-nginx-admission --ignore-not-found=true
+        kubectl delete validatingwebhookconfiguration validate.nginx.ingress.kubernetes.io --ignore-not-found=true 
 
     - name: 'Deploying the ClusterIssuer to EKS'
       run: kubectl apply -f ClusterIssuer.yaml
