@@ -51,10 +51,12 @@ jobs:
     - name: 'authenticate to EKS Cluster'
       run: aws eks update-kubeconfig --name ${{  secrets.EKS_CLUSTER_NAME }} --region us-west-1
 
-    - name: 'Clean up ghost NGINX webhooks'
+    - name: 'Blast away the ghost webhook'
       run: |
         kubectl delete validatingwebhookconfiguration ingress-nginx-admission --ignore-not-found=true
-        kubectl delete validatingwebhookconfiguration validate.nginx.ingress.kubernetes.io --ignore-not-found=true 
+        kubectl delete validatingwebhookconfiguration validate.nginx.ingress.kubernetes.io --ignore-not-found=true
+        # This line catches any remaining nginx webhooks blocking the deployment
+        kubectl get validatingwebhookconfigurations | grep nginx | awk '{print $1}' | xargs -r kubectl delete validatingwebhookconfiguration
 
     - name: 'Deploying the ClusterIssuer to EKS'
       run: kubectl apply -f ClusterIssuer.yaml
