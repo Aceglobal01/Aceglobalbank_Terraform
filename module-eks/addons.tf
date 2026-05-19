@@ -74,6 +74,7 @@ resource "time_sleep" "wait_for_ingress_lb" {
 # ==================================================
 
 data "kubernetes_service" "ingress_nginx" {
+  provider = kubernetes.eks
   metadata {
     # The name Helm typically assigns to the controller service 
     name      = "nginx-ingress-v2-ingress-nginx-controller" 
